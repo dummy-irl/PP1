@@ -1,6 +1,6 @@
 # Praktikum 1: Neural Network in C++
 
-This project implements a small neural network in C++17. 
+This project implements a small neural network in C++. 
 
 ## Work plan
 
