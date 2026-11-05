@@ -9,7 +9,7 @@ This project implements a small neural network in C++.
 |---|---|---:|
 | **A ** | 3. LeakyReLU and ReLU (1); 4.`dotProduct` and `sum` (1); 6. Network constructor/destructor and full forward propagation (1.5); 7. Binary Cross-Entropy `getCostValue` (1) | 4.5 |
 | **B ** | 3. ScaledSigmoid and Sigmoid (1); 4. both `normalize` functions (1); 6. Network `addLayer`, `getLayerInput`, and full backward propagation (1.5); 7. Binary Cross-Entropy accuracy and gradient (1) | 4.5 |
-| **C ** | 5. Network (4); 6. `trainBatch` and `computeAccuracy` (1) | 5 |
+| **C ** | 5. Layer (4); 6. `trainBatch` and `computeAccuracy` (1) | 5 |
 
 
 ## Git collaboration workflow
