@@ -16,4 +16,23 @@ std::vector<double> encodeAsOneHot(double value, std::size_t numClasses) {
     return encoded;
 }
 
+double dotProduct(const std::vector<double>& a, const std::vector<double>& b) {
+    if (a.size() != b.size()) {
+        throw std::invalid_argument("dotProduct requires vectors of equal size");
+    }
+    double result = 0.0;
+    for (std::size_t i = 0; i < a.size(); i++) {
+        result += a[i] * b[i];
+    }
+    return result;
+}
+
+double sum(const std::vector<double>& values) {
+    double result = 0.0;
+    for (const double& value : values) {
+        result += value;
+    }
+    return result;
+}
+
 }
