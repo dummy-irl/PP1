@@ -4,7 +4,14 @@
 
 #include <string>
 
+namespace dnn {
 
-class ReLU {
+class ReLU : public ActivationFunction {
+public:
+    double activation(double x) override;
+    double activationBackwards(double x) override;
+    std::string getName() const override;
 };
+
+}
 

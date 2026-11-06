@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/dan/workspace/tu_exs/PPexs/PP1/code/build/cmake_install.cmake",
+		"/home/dan/workspace/tu_exs/PPexs/PP1/code/build/tests/compilation/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
