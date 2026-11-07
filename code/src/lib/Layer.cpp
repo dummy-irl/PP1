@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <utility>
+#include <stdexcept>
 
 namespace dnn {
 
@@ -44,6 +45,97 @@ void Layer::init() {
 void Layer::setParameters(std::vector<std::vector<double>> weights, std::vector<double> bias) {
     this->weights = std::move(weights);
     this->bias = std::move(bias);
+}
+
+void Layer::forwardPropagation(const std::vector<double>& previousLayerOutput) {
+    // reset after each call
+    preActivationOutput.assign(layerOutputSize, 0.0);
+    activationOutput.assign(layerOutputSize, 0.0);
+    for (std::uint64_t i = 0; i < layerOutputSize; i++) {
+        // preActivationOutput[i] = weights[i] · previousLayerOutput + bias[i]
+        preActivationOutput[i] = dnn::dotProduct(weights[i], previousLayerOutput) + bias[i];
+        // activationOutput[i] = activation(preActivationOutput[i])
+        activationOutput[i] = activationFunction->activation(preActivationOutput[i]);
+    }
+}
+
+void Layer::backwardPropagation(const std::vector<double>& dActivationOutput, const std::vector<double>& previousLayerOutput) {
+    
+    if (!activationFunction) {throw std::logic_error("Layer has no activation function");}
+    
+    std::vector<double> dPreActivation(layerOutputSize);
+    dWeights.resize(layerOutputSize);
+    
+    for (std::uint64_t i = 0; i < layerOutputSize; i++) {
+        // dPreActivation[i] = dActivationOutput[i] · activationBackwards(preActivationOutput[i])
+        dPreActivation[i] = dActivationOutput[i] * activationFunction->activationBackwards(preActivationOutput[i]);
+        dWeights[i].resize(layerInputSize);
+        for (std::uint64_t j = 0; j < layerInputSize; j++) {
+            // dWeights[i][j] = dPreActivation[i] · previousLayerOutput[j]
+            dWeights[i][j] = dPreActivation[i] * previousLayerOutput[j];
+        }
+    }
+    dBias = dPreActivation;
+
+    // accumulatedDWeights = accumulatedDWeights + dWeights
+    for (std::size_t i = 0; i < dWeights.size(); i++) {
+        for (std::size_t j = 0; j < dWeights[i].size(); j++) {
+            accumulatedDWeights[i][j] += dWeights[i][j];
+        }
+    }
+
+    // accumulatedDBias = accumulatedDBias + dBias
+    for (std::size_t i = 0; i < dBias.size(); i++) {
+        accumulatedDBias[i] += dBias[i];
+    }
+    numProcessedSamples++;
+    dPreviousLayerOutput.assign(layerInputSize, 0.0);
+    
+    for (std::uint64_t j = 0; j < layerInputSize; j++) {
+        std::vector<double> weightsColumn(layerOutputSize);
+        for (std::uint64_t i = 0; i < layerOutputSize; i++) {
+            // weightsColumn[i] = weights[i][j]
+            weightsColumn[i] = weights[i][j];
+        }
+        // dPreviousLayerOutput[j] = weightsColumn · dPreActivation
+        dPreviousLayerOutput[j] = dnn::dotProduct(weightsColumn, dPreActivation);
+    }
+}
+
+void Layer::updateParameters(const std::vector<std::vector<double>>& dWeights, const std::vector<double>& dBias, double learningRate) {
+    // weights = weights − learningRate · dWeights
+    for (std::size_t i = 0; i < dWeights.size(); i++) {
+        for (std::size_t j = 0; j < dWeights[i].size(); j++) {
+            weights[i][j] -= learningRate * dWeights[i][j];
+        }
+    }
+    // bias = bias − learningRate · dBias
+    for (std::size_t i = 0; i < bias.size(); i++) {
+        bias[i] -= learningRate * dBias[i];
+    }
+}
+
+void Layer::commitToWeights(double learningRate) {
+    // accumulatedDWeight = accumulatedDWeights/numProcessedSamples
+    if (numProcessedSamples == 0) {return;}
+    for (std::size_t i = 0; i < accumulatedDWeights.size(); i++) {
+        for (std::size_t j = 0; j < accumulatedDWeights[i].size(); j++) {
+            accumulatedDWeights[i][j] /= numProcessedSamples;
+        }
+    }
+    // accumulatedDBias = accumulatedDBias/numProcessedSamples
+    for (std::size_t i = 0; i< accumulatedDBias.size(); i++) {
+        accumulatedDBias[i] /= numProcessedSamples;
+    }
+
+    Layer::updateParameters(accumulatedDWeights, accumulatedDBias, learningRate);
+
+    for (auto& row : accumulatedDWeights) {
+        row.assign(row.size(), 0.0);
+    }
+    accumulatedDBias.assign(accumulatedDBias.size(), 0.0);
+    numProcessedSamples = 0;
+
 }
 
 uint64_t Layer::getId() const {
